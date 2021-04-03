@@ -1,5 +1,6 @@
 {
     "bpm":120,
     "rhythm_pattern": [1,1,2,3],
-    "alphabet": "wasd"
+    "alphabet": "wasd",
+    "game_time": 6
 }

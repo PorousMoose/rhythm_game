@@ -1,7 +1,7 @@
 import json
 import pygame
-from pygame import font as pyfont
 import random
+import threading
 
 from time import sleep
 
@@ -45,7 +45,7 @@ def generate_rhythm_surface(rhythm_pattern, alphabet):
     # getting the first font is done for system cross-compatibily reasons
     letter_size = 100
     beat_width = WIDTH / 4
-    font = pyfont.SysFont(pyfont.get_fonts()[0], letter_size)
+    font = pygame.font.SysFont(pygame.font.get_fonts()[0], letter_size)
 
     rhythm_surface_width = (beat_width * sum(rhythm_pattern)) + 100
     rhythm_surface = pygame.Surface((rhythm_surface_width, 100))
@@ -57,9 +57,7 @@ def generate_rhythm_surface(rhythm_pattern, alphabet):
     return rhythm_surface
 
 
-def create_pygame_surface():
-    config = load_validate_settings()
-
+def create_pygame_surface(config):
     rhythm_surface = generate_rhythm_surface(
         config["rhythm_pattern"], config["alphabet"]
     )
@@ -78,9 +76,19 @@ def create_pygame_surface():
         pygame.display.flip()
 
 
+def play_music():
+    pygame.mixer.music.load("game_music.wav")
+    pygame.mixer.music.play()
+
+
 def main():
     pygame.init()
-    create_pygame_surface()
+    pygame.mixer.pre_init(44100, -16, 2, 2048)
+    config = load_validate_settings()
+    music_thread = threading.Thread(target=play_music)
+    render_thread = threading.Thread(target=create_pygame_surface, args=[config])
+    music_thread.run()
+    render_thread.run()
 
 
 if __name__ == "__main__":
