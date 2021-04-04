@@ -4,7 +4,7 @@ import random
 
 from time import sleep
 
-SIZE = WIDTH, HEIGHT = (800, 400)
+SIZE = WIDTH, HEIGHT = (800, 600)
 FPS = 60
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -44,19 +44,25 @@ def generate_rhythm_surface(rhythm_pattern, alphabet):
             total += x
             yield total
 
-    # getting the first font is done for system cross-compatibily reasons
     letter_size = 100
     beat_width = WIDTH / 4
+    # getting the first font is done for system cross-compatibily reasons
     font = pygame.font.SysFont(pygame.font.get_fonts()[0], letter_size)
 
     rhythm_surface_width = (beat_width * sum(rhythm_pattern)) + 100
     rhythm_surface = pygame.Surface((rhythm_surface_width, 100))
+    letters = []
+    spacers = []
 
     for size in accumulator(rhythm_pattern):
-        letter = font.render(random.choice(alphabet), True, WHITE, BLACK)
-        rhythm_surface.blit(letter, (beat_width * size, 0))
+        letter = random.choice(alphabet)
+        letters.append(letter)
+        letter_surface = font.render(letter, True, WHITE, BLACK)
+        spacer = beat_width * size
+        spacers.append(spacer)
+        rhythm_surface.blit(letter_surface, (spacer, 0))
 
-    return rhythm_surface
+    return (rhythm_surface, letters, spacers)
 
 
 def main():
@@ -64,8 +70,13 @@ def main():
     pygame.mixer.pre_init(44100, -16, 2, 2048)
     config = load_validate_settings()
 
+    screen = pygame.display.set_mode(SIZE)
+    indicator_rectangle = pygame.Surface((100, 200))
+    indicator_rectangle.fill(WHITE)
+
     pygame.mixer.music.load("game_music.wav")
-    rhythm_surface = generate_rhythm_surface(
+
+    rhythm_surface, letters, spacers = generate_rhythm_surface(
         config["rhythm_pattern"], config["alphabet"]
     )
 
@@ -75,7 +86,6 @@ def main():
     # speed is pixels to move text so that 4 beats of text are on screen at any moment
     speed = pixels_per_beat / (beat_length * FPS)
 
-    screen = pygame.display.set_mode(SIZE)
     for tick in range(config["runtime"] * FPS):
         # start music as letters hit edge of screen
         if tick == (beat_length * FPS * 4):
@@ -83,7 +93,9 @@ def main():
 
         sleep(1 / FPS)
         screen.fill(BLACK)
-        screen.blit(rhythm_surface, (WIDTH - (tick * speed), 125))
+        screen.blit(indicator_rectangle, (0, 0))
+        screen.blit(indicator_rectangle, (0, 400))
+        screen.blit(rhythm_surface, (WIDTH - (tick * speed), 225))
         pygame.display.flip()
 
 
