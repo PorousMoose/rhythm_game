@@ -1,12 +1,11 @@
 import json
 import pygame
 import random
-import threading
 
 from time import sleep
 
 SIZE = WIDTH, HEIGHT = (800, 400)
-FPS = 30
+FPS = 60
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
@@ -23,8 +22,8 @@ def load_validate_settings():
     if type(config["bpm"]) not in (float, int):
         raise Exception("bpm must be a number")
 
-    if type(config['runtime']) is not int:
-        raise Exception('runtime must be a whole number')
+    if type(config["runtime"]) is not int:
+        raise Exception("runtime must be a whole number")
 
     if type(config["alphabet"]) is not str:
         raise Exception("alphabet must be a string")
@@ -60,7 +59,12 @@ def generate_rhythm_surface(rhythm_pattern, alphabet):
     return rhythm_surface
 
 
-def create_pygame_surface(config):
+def main():
+    pygame.init()
+    pygame.mixer.pre_init(44100, -16, 2, 2048)
+    config = load_validate_settings()
+
+    pygame.mixer.music.load("game_music.wav")
     rhythm_surface = generate_rhythm_surface(
         config["rhythm_pattern"], config["alphabet"]
     )
@@ -72,26 +76,15 @@ def create_pygame_surface(config):
     speed = pixels_per_beat / (beat_length * FPS)
 
     screen = pygame.display.set_mode(SIZE)
-    for tick in range(config['runtime']*FPS):
-        sleep(1 / 30)
+    for tick in range(config["runtime"] * FPS):
+        # start music as letters hit edge of screen
+        if tick == (beat_length * FPS * 4):
+            pygame.mixer.music.play()
+
+        sleep(1 / FPS)
         screen.fill(BLACK)
-        screen.blit(rhythm_surface, (800 - (tick * speed), 125))
+        screen.blit(rhythm_surface, (WIDTH - (tick * speed), 125))
         pygame.display.flip()
-
-
-def play_music():
-    pygame.mixer.music.load("game_music.wav")
-    pygame.mixer.music.play()
-
-
-def main():
-    pygame.init()
-    pygame.mixer.pre_init(44100, -16, 2, 2048)
-    config = load_validate_settings()
-    music_thread = threading.Thread(target=play_music)
-    render_thread = threading.Thread(target=create_pygame_surface, args=[config])
-    music_thread.run()
-    render_thread.run()
 
 
 if __name__ == "__main__":
