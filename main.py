@@ -23,6 +23,9 @@ def load_validate_settings():
     if type(config["bpm"]) not in (float, int):
         raise Exception("bpm must be a number")
 
+    if type(config['runtime']) is not int:
+        raise Exception('runtime must be a whole number')
+
     if type(config["alphabet"]) is not str:
         raise Exception("alphabet must be a string")
 
@@ -69,7 +72,7 @@ def create_pygame_surface(config):
     speed = pixels_per_beat / (beat_length * FPS)
 
     screen = pygame.display.set_mode(SIZE)
-    for tick in range(120):
+    for tick in range(config['runtime']*FPS):
         sleep(1 / 30)
         screen.fill(BLACK)
         screen.blit(rhythm_surface, (800 - (tick * speed), 125))
